@@ -7,6 +7,7 @@
 #include <iostream>
 #include <algorithm>
 #include <dirent.h>
+#include<fstream>
 
 
 using namespace std;
@@ -34,6 +35,21 @@ vector<string> execute_cmd(const char *cmd) {
     return result;
 }
 
+vector<string> get_dir(string path) {
+    vector<string> result;
+    DIR *dir;
+    struct dirent *ptr;
+    dir = opendir(path.data());
+    ptr = readdir(dir);
+    while (ptr) {
+        if (ptr->d_name[0] != '.')
+            result.push_back(ptr->d_name);
+        ptr = readdir(dir);
+    }
+    return result;
+}
+
+
 vector<string> get_all_pid() {
     vector<string> result;
     DIR *dir;
@@ -60,6 +76,15 @@ vector<string> get_maps(int pid) {
     string cmd = "cat /proc/" + to_string(pid) + "/maps";
     vector<string> maps_result = execute_cmd(cmd.data());
     return maps_result;
+}
+
+void print_file(string path) {
+    ifstream inFile(path);
+    string str;
+    while (inFile.good()) {
+        getline(inFile, str);  //该方法来自<string>
+        cout << str << endl;
+    }
 }
 
 compare_result compare_vector_string(vector<string> before, vector<string> after) {
@@ -135,12 +160,13 @@ void print_compare_result(int pid) {
 
 
 int main() {
-    vector<string> result = get_all_pid();
+    vector<string> result = get_dir("/proc");
     // executeCMD("ls -l /proc/1/fd");
     for (int i = 0; i < result.size(); i++) {
         cout << result[i] << " ";
     }
 
+    //print_file("/home/yuanz/CLionProjects/osproj2_task2/123");
 
     // cout << "pls input the pid:\n";
     // int input_pid = 0;
