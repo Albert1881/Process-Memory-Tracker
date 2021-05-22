@@ -1,0 +1,8 @@
+7
+_ZN21StackTracerManagement16setAddrBacktraceERP12trace_recordPvm at /mnt/hgfs/win_share/MemoryTracer/build_sh/../src/StackTracerManagement.cpp:31
+_ZN21StackTracerManagement6insertEPvm at /mnt/hgfs/win_share/MemoryTracer/build_sh/../src/StackTracerManagement.cpp:75
+_Z14signal_handleri at /mnt/hgfs/win_share/MemoryTracer/build_sh/../src/TracerSignal.cpp:44
+Can't parse message: /lib/x86_64-linux-gnu/libc.so.6(+0x354c0) [0x7f14844904c0]
+main at /mnt/hgfs/win_share/MemoryTracer/build_sh/../test/main.cpp:57 (discriminator 1)
+Can't parse message: /lib/x86_64-linux-gnu/libc.so.6(__libc_start_main+0xf0) [0x7f148447b840]
+_start at ??:?
