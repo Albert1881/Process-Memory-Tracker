@@ -13,18 +13,21 @@
 #include <thread>
 #include <mutex>
 #include <sstream>
+#include<time.h>
+#include<algorithm>
 
 
 #include "MemoryAllocationWrap.h"
 #include "TracerSignal.h"
 
-#define MAX_STACK_FRAMES 64
+#define MAX_STACK_FRAMES 128
 #define MAX_PROG_NAME_LENGTH 64
 #define MAX_PROG_ADDR_LENGTH 64
 
 
 struct trace_record {
-    int pid;
+    unsigned long id;
+    unsigned long long pid;
     unsigned long long tid;
     void *address;
     size_t size;
@@ -51,12 +54,22 @@ public:
 
     trace_record *findTraceRecord(void *ptr);
 
-    void recordLeakerMemoryInfo(void);
+    void recordLeakerMemoryInfo(char const *path);
 
     void parseCmd(char const *message, char *&result);
 
+    void getRecordList(trace_record *&record_list);
+
+    void getLock() {
+        if (!StackTracerManagement::getInstance().stack_trace_mutex.try_lock()) {
+            StackTracerManagement::getInstance().stack_trace_mutex.unlock();
+        }
+    }
+
 private:
     int total_size = 0;
+    int count = 0;
+    int ID = 0;
 
     trace_record *stack_trace_map[MAX_STACK_FRAMES];
 
@@ -92,7 +105,6 @@ private:
     void parseProgName(char const *message, char *&prog_name);
 
     void parseProgAddr(char const *message, char *&prog_addr);
-
 
     bool addr2line(char const *const program_name, void const *const address, char *result);
 

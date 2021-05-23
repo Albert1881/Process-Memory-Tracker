@@ -22,7 +22,7 @@
 
 #define MKDIR(path) mkdir(path,S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH)
 
-int initDirectory(int pid);
+int initDirectory(unsigned long long pid);
 
 int createDirectory(const char *directoryPath);
 
@@ -30,7 +30,7 @@ void getfilepath(const char *path, const char *filename, char *filepath);
 
 bool clearDirectory(const char *path);
 
-bool removeDirectory(int pid);
+bool removeDirectory(unsigned long long pid);
 
 void recordInsertFile(trace_record *&record);
 

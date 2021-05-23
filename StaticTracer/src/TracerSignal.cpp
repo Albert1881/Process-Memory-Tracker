@@ -16,6 +16,7 @@ void set_trace_signal() {
 
 
 void signal_handler(int signum) {
+
     switch (signum) {
         case SIGSEGV:
             printf("Caught SIGSEGV: Segmentation Fault\n");
@@ -40,8 +41,8 @@ void signal_handler(int signum) {
             break;
 
     }
+    StackTracerManagement::getInstance().getLock();
     StackTracerManagement::getInstance().insert(NULL, 0);
-    StackTracerManagement::getInstance().recordLeakerMemoryInfo();
     exit(signum);
 }
 

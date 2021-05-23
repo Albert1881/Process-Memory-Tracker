@@ -4,16 +4,16 @@
 
 #include "../include/FileManagement.h"
 
-int initDirectory(int pid) {
+int initDirectory(unsigned long long pid) {
     char path[MAX_PATH_LEN] = {0};
-    sprintf(path, "/tmp/memTracer/%d/", pid);
+    sprintf(path, "/tmp/memTracer/%llu/", pid);
     clearDirectory(path);
     createDirectory(path);
 }
 
-bool removeDirectory(int pid) {
+bool removeDirectory(unsigned long long pid) {
     char path[MAX_PATH_LEN] = {0};
-    sprintf(path, "/tmp/memTracer/%d/", pid);
+    sprintf(path, "/tmp/memTracer/%llu/", pid);
     printf("rmd %s\n", path);
     clearDirectory(path);
     rmdir(path);
@@ -79,10 +79,10 @@ void recordInsertFile(trace_record *&record) {
     std::fstream File_output;
     char path[MAX_PATH_LEN] = {0};
 
-    sprintf(path, "/tmp/memTracer/%d/%zu/%zu_%ld_%d",
+    sprintf(path, "/tmp/memTracer/%llu/%llu/%zu_%ld_%zu",
             record->pid,
             record->tid,
-            record->address,
+            reinterpret_cast<size_t>(record->address),
             reinterpret_cast<long>( record->create_time),
             record->size);
 //    printf("%s\n", path);
@@ -102,12 +102,12 @@ void recordInsertFile(trace_record *&record) {
 void recordRemoveFile(trace_record *&record) {
     char path[MAX_PATH_LEN] = {0};
 
-    sprintf(path, "/tmp/memTracer/%d/%zu/%zu_%ld_%d",
+    sprintf(path, "/tmp/memTracer/%llu/%llu/%zu_%ld_%zu",
             record->pid,
             record->tid,
-            record->address,
+            reinterpret_cast<size_t>(record->address),
             reinterpret_cast<long>( record->create_time),
             record->size);
-    printf("rr %s\n", path);
+//    printf("rrmove %s\n", path);
     remove(path);
 }

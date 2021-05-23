@@ -54,10 +54,11 @@ int main() {
 //    printf("MainThreadID: %ld\n",std::this_thread::get_id());
 //    thread_test();
     std::hash < std::thread::id > {}(std::this_thread::get_id());
-    while (true){
-
-    }
+//    while (true) {
+//
+//    }
 //    test1();
+    thread_test();
     return 0;
 }
 
@@ -65,9 +66,9 @@ int main() {
 void thread_malloc(int size) {
     std::thread::id tid = std::this_thread::get_id();
 
-    printf("ThreadID: %ld\n", tid);
+//    printf("ThreadID: %ld\n", tid);
     char *p1 = (char *) malloc(size);
-    free(p1);
+//    free(p1);
 }
 
 void thread_test() {

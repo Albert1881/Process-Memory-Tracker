@@ -14,7 +14,7 @@ StackTracerManagement *StackTracerManagement::_instance = NULL;
 StackTracerManagement::~StackTracerManagement() {
     removeAll();
     if (!isEmpty()) {
-        recordLeakerMemoryInfo();
+        recordLeakerMemoryInfo(NULL);
     }
     removeDirectory(getpid());
 };
@@ -30,6 +30,7 @@ void StackTracerManagement::setAddrBacktrace(trace_record *&record, void *ptr, s
     void *traces[MAX_STACK_FRAMES];
     int trace_size = backtrace(traces, MAX_STACK_FRAMES);
     total_size += size;
+    count += 1;
     if (trace_size) {
         messages = backtrace_symbols(traces, trace_size);
     }
@@ -40,6 +41,8 @@ void StackTracerManagement::setAddrBacktrace(trace_record *&record, void *ptr, s
     std::ostringstream oss;
     oss << std::this_thread::get_id();
     std::string stid = oss.str();
+    record->id = ID;
+    ID++;
     record->tid = std::stoull(stid);
     record->address = ptr;
     record->size = size;
@@ -52,6 +55,7 @@ void StackTracerManagement::setAddrBacktrace(trace_record *&record, void *ptr, s
 void StackTracerManagement::releaseAddrBacktrace(trace_record *&record) {
     recordRemoveFile(record);
     total_size -= record->size;
+    count -= 1;
     if (record->messages) {
         __real_free(record->messages);
     }
@@ -61,6 +65,7 @@ void StackTracerManagement::releaseAddrBacktrace(trace_record *&record) {
 
 bool StackTracerManagement::insert(void *ptr, size_t size) {
     const std::lock_guard <std::mutex> lock(stack_trace_mutex);
+
     unsigned long hashValue = hashFunction(ptr);
 
     trace_record *prev = NULL;
@@ -125,15 +130,15 @@ void StackTracerManagement::removeAll(void) {
 }
 
 bool StackTracerManagement::isEmpty(void) {
-    const std::lock_guard <std::mutex> lock(stack_trace_mutex);
-
-    for (int i = 0; i < MAX_STACK_FRAMES; ++i) {
-        trace_record *entry = stack_trace_map[i];
-        if (entry != NULL) {
-            return false;
-        }
-    }
-    return true;
+//    const std::lock_guard <std::mutex> lock(stack_trace_mutex);
+//
+//    for (int i = 0; i < MAX_STACK_FRAMES; ++i) {
+//        trace_record *entry = stack_trace_map[i];
+//        if (entry != NULL) {
+//            return false;
+//        }
+//    }
+    return count == 0;
 }
 
 trace_record *StackTracerManagement::findTraceRecord(void *ptr) {
@@ -170,7 +175,10 @@ bool StackTracerManagement::addr2line(char const *const program_name, void const
     char addr2line_cmd[512] = {0};
     char buff[1024] = {0};
     /* have addr2line map the address to the relent line in the code */
-
+    char const *dynamic_file = ".so.";
+    if (strstr(program_name, dynamic_file)) {
+        return false;
+    }
     sprintf(addr2line_cmd, "addr2line -f -p -e %.256s %s", program_name, (char *) (address));
 //    system(addr2line_cmd);
     FILE *out = popen(addr2line_cmd, "r");
@@ -209,21 +217,61 @@ void StackTracerManagement::parseCmd(char const *message, char *&result) {
     }
 }
 
-void StackTracerManagement::recordLeakerMemoryInfo(void) {
-    const std::lock_guard <std::mutex> lock(stack_trace_mutex);
+bool cmp_record(trace_record *x, trace_record *y) {
+    return x->id < y->id;
+}
+
+void StackTracerManagement::getRecordList(trace_record *&record_list) {
     for (int i = 0; i < MAX_STACK_FRAMES; ++i) {
         trace_record *prev = NULL;
         trace_record *entry = stack_trace_map[i];
         while (entry != NULL) {
-            for (int j = 0; j < entry->depth; ++j) {
-                char *message = entry->messages[j];
-                char result[1024] = {0};
-                char *result_ptr = result;
-                parseCmd(message, result_ptr);
-                printf("%s", result);
-            }
+            *record_list = *entry;
             prev = entry;
             entry = entry->next;
+            record_list += 1;
         }
+    }
+}
+
+void StackTracerManagement::recordLeakerMemoryInfo(char const *path) {
+    const std::lock_guard <std::mutex> lock(stack_trace_mutex);
+    FILE *fout;
+    if (path != NULL) {
+        if ((fout = fopen(path, "w")) == NULL) {
+            printf("Can't fopen %s", path);
+            fout = stdout;
+        }
+    } else {
+        fout = stdout;
+    }
+    trace_record **record_list = reinterpret_cast<trace_record **>(__real__Znwm(sizeof(trace_record *) * count));
+    int num = 0;
+    for (int i = 0; i < MAX_STACK_FRAMES; ++i) {
+        trace_record *entry = stack_trace_map[i];
+        while (entry != NULL) {
+            record_list[num] = entry;
+            num += 1;
+            entry = entry->next;
+        }
+    }
+    std::sort(record_list, record_list + count, cmp_record);
+    for (int i = 0; i < count; ++i) {
+        fprintf(fout, "ID: %d\n", i + 1);
+        fprintf(fout, "Time: %s", asctime(localtime(&record_list[i]->create_time)));
+        fprintf(fout, "PID: %llu, TID: %llu\n", record_list[i]->pid, record_list[i]->tid);
+        fprintf(fout, "There are %d messages: \n", record_list[i]->depth);
+        for (int j = 0; j < record_list[i]->depth; ++j) {
+            char *message = record_list[i]->messages[j];
+            char result[1024] = {0};
+            char *result_ptr = result;
+            parseCmd(message, result_ptr);
+            fprintf(fout, "%s", result);
+        }
+        fprintf(fout, "\n");
+    }
+    __real__ZdlPv(record_list);
+    if (fout != stdout) {
+        fclose(fout);
     }
 }
