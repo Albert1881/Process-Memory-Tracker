@@ -4,8 +4,59 @@
 #include <iostream>
 #include <dirent.h>
 #include <unistd.h>
+#include <algorithm>
+#include <cstring>
+#include <fstream>
 #include "Task.h"
+//CPU
+int get_cpuoccupy(CPU_OCCUPY *cpust) {
+    FILE *fd;
+    char buff[256];
+    CPU_OCCUPY *cpu_occupy;
+    cpu_occupy = cpust;
 
+    fd = fopen("/proc/stat", "r");
+    fgets(buff, sizeof(buff), fd);
+
+    sscanf(buff, "%s %u %u %u %u %u %u %u", cpu_occupy->name, &cpu_occupy->user, &cpu_occupy->nice, &cpu_occupy->system,
+           &cpu_occupy->idle, &cpu_occupy->lowait, &cpu_occupy->irq, &cpu_occupy->softirq);
+
+    fclose(fd);
+    return 0;
+}
+float cal_cpu_occupy(CPU_OCCUPY *cpu_stat1, CPU_OCCUPY *cpu_stat2) {
+    unsigned long od, nd;
+    double cpu_use;
+
+    od = (unsigned long) (cpu_stat1->user + cpu_stat1->nice + cpu_stat1->system + cpu_stat1->idle + cpu_stat1->lowait +
+                          cpu_stat1->irq +
+                          cpu_stat1->softirq);
+    nd = (unsigned long) (cpu_stat2->user + cpu_stat2->nice + cpu_stat2->system + cpu_stat2->idle + cpu_stat2->lowait +
+                          cpu_stat2->irq +
+                          cpu_stat2->softirq);
+
+    double sum = nd - od;
+    double idle = cpu_stat2->user + cpu_stat2->system + cpu_stat2->nice - cpu_stat1->user - cpu_stat1->system -
+                  cpu_stat1->nice;
+    cpu_use = idle / sum;
+    return cpu_use;
+}
+float get_cpu_usage() {
+    CPU_OCCUPY cpu_stat1;
+    CPU_OCCUPY cpu_stat2;
+
+    get_cpuoccupy((CPU_OCCUPY *) &cpu_stat1);
+
+    usleep(200000);
+
+    //第二次获取cpu使用情况
+    get_cpuoccupy((CPU_OCCUPY *) &cpu_stat2);
+    //计算cpu使用率
+
+    float cpu_use = cal_cpu_occupy((CPU_OCCUPY *) &cpu_stat1, (CPU_OCCUPY *) &cpu_stat2);
+    return cpu_use;
+}
+//Task1
 ull getTotalMem(){
     FILE *fp = fopen("/proc/meminfo", "r"); /* 打开文件 */
     char buf[MAX];
@@ -46,7 +97,8 @@ void getMemInfo(std::mutex &mt,std::set<Process>&mySet,std::set<int>&pids,ull to
         char buf[MAX];
         if ((dir = opendir("/proc")) == nullptr) { /* 打开/proc目录 */
             perror("fail to open dir");
-            return;
+            mt.unlock();
+            continue;
         }
         while ((entry = readdir(dir)) != nullptr) {
             if (entry->d_name[0] == '.') /* 跳过当前目录，proc目录没有父目录 */
@@ -60,6 +112,7 @@ void getMemInfo(std::mutex &mt,std::set<Process>&mySet,std::set<int>&pids,ull to
             fp = fopen(path, "r"); /* 打开文件 */
             if (fp == nullptr) {
                 perror("fail to open");
+                mt.unlock();
                 return;
             }
             while (fgets(buf, MAX, fp) != nullptr) { /* 读取每一行 */
@@ -141,7 +194,7 @@ void getMemInfo(std::mutex &mt,std::set<Process>&mySet,std::set<int>&pids,ull to
 
 void getSuspiciousPid(std::vector<int> &list,std::set<Process>&mySet){
     for (const auto & iter : mySet) {
-        if(iter.VmRSSrate >= 1) {
+        if(iter.VmSizerate >= 1) {
             list.push_back(iter.pid);
         }
     }
@@ -150,15 +203,15 @@ void getSuspiciousPid(std::vector<int> &list,std::set<Process>&mySet){
 void traverseMemInfo(std::mutex &mt,std::set<Process>&mySet) {
     mt.lock();
     printf("\nThere are %lu datas\n",mySet.size());
-    printf("name\tpid\tVmRSS(KB)\tVmData(KB)\n");
+    printf("name\tpid\tVmSize(KB)\tVmRSS(KB)\n");
     for (const auto & iter : mySet) {
-        printf("%s\t%d\t%llu\t%llu\t%llu\n",iter.name.c_str(),iter.pid,iter.VmSize,iter.VmRSS,iter.VmData);
+        printf("%s\t%d\t%llu\t%llu\n",iter.name.c_str(),iter.pid,iter.VmSize,iter.VmRSS);
         //std::cout<<iter.VmRSSrate<<"\n";
     }
     mt.unlock();
 }
 
-void detectCertainPid(std::set<Process>&mySet,std::set<int>&pids) {
+int detectCertainPid(std::set<Process>&mySet,std::set<int>&pids) {
     std::string s_pid;
     std::vector<int>suspiciousPid;
     getSuspiciousPid(suspiciousPid,mySet);
@@ -171,12 +224,154 @@ void detectCertainPid(std::set<Process>&mySet,std::set<int>&pids) {
     int pid = strtol(s_pid.c_str(), nullptr,10);
     if(pid == 0 || pids.find(pid) == pids.end()){
         printf("Please enter the correct pid\n");
-        return;
+        return -1;
     }else{
         printf("This is %d\n",pid);
-        
+        return pid;
     }
 }
 
+//Task2
+std::vector<std::string>get_dir(const std::string& path){
+    std::vector<std::string> result;
+    DIR *dir;
+    struct dirent *ptr;
+    dir = opendir(path.data());
+    ptr = readdir(dir);
+    while (ptr) {
+        if (ptr->d_name[0] != '.')
+            result.emplace_back(ptr->d_name);
+        ptr = readdir(dir);
+    }
+    return result;
+}
+std::vector<std::string> execute_cmd(const char *cmd) {
+    std::vector<std::string> result;
+    char buf_ps[1024];
+    char ps[1024] = {0};
+    FILE *ptr;
+    std::strcpy(ps, cmd);
+    if ((ptr = popen(ps, "r")) != nullptr) {
+        while (fgets(buf_ps, 1024, ptr) != nullptr) {
+            result.emplace_back(buf_ps);
+        }
+        pclose(ptr);
+        ptr = nullptr;
+    } else {
+        printf("popen %s error\n", ps);
+    }
+    return result;
+}
 
+std::vector<std::string> get_fd(int &pid) {
+    std::string cmd = "ls -l /proc/" + std::to_string(pid) + "/fd";
+    std::vector<std::string> fd_result = execute_cmd(cmd.data());
+    return fd_result;
+}
+
+std::vector<std::string> get_maps(int &pid) {
+    std::string cmd = "cat /proc/" + std::to_string(pid) + "/maps";
+    std::vector<std::string> maps_result = execute_cmd(cmd.data());
+    return maps_result;
+}
+
+compare_result compare_vector_string(std::vector<std::string> before, std::vector<std::string> after) {
+    std::vector<std::string> before_result;
+    std::vector<std::string> after_result;
+    for (auto & i : before) {
+        if (find(after.begin(), after.end(), i) == after.end()) {
+            before_result.push_back(i);
+        }
+    }
+    for (auto & i : after) {
+        if (find(before.begin(), before.end(), i) == before.end()) {
+            after_result.push_back(i);
+        }
+    }
+    return {before_result, after_result};
+}
+
+void print_compare_result(std::mutex &mt,int &pid,bool &flag) {
+    std::vector<std::string> before_fd, after_fd, before_maps, after_maps;
+    before_fd = get_fd(pid);
+    before_maps = get_maps(pid);
+    sleep(1);
+    while (flag) {
+        mt.lock();
+        after_fd = get_fd(pid);
+        after_maps = get_maps(pid);
+
+        time_t now = time(nullptr);
+        char *dt = ctime(&now);
+        std::cout << "time:" << dt << "\n";;
+
+        compare_result result_fd = compare_vector_string(before_fd, after_fd);
+        compare_result result_maps = compare_vector_string(before_maps, after_maps);
+
+        std::cout << "The process " << pid << " maps now lacks:\n";
+        std::cout << "--------------------------------------\n";
+
+        for (auto & i : result_maps.before_result) {
+            std::cout << i;
+        }
+        std::cout << "\n";
+        std::cout << "Now the process " << pid << " maps has increased:\n";
+
+        std::cout << "--------------------------------------\n";
+
+        for (auto & i : result_maps.after_result) {
+            std::cout << i;
+        }
+
+        std::cout << "\n";
+
+        std::cout << "The process " << pid << " fd now lacks:\n";
+        std::cout << "--------------------------------------\n";
+
+        for (auto & i : result_fd.before_result) {
+            std::cout << i;
+        }
+        std::cout << "\n";
+        std::cout << "Now the process " << pid << " fd has increased:\n";
+
+        std::cout << "--------------------------------------\n";
+
+        for (auto & i : result_fd.after_result) {
+            std::cout << i;
+        }
+        std::cout << "\n";;
+        before_fd = after_fd;
+        before_maps = after_maps;
+        mt.unlock();
+        sleep(10);
+    }
+}
+
+void print_detect_static(int &pid){
+    std::vector<std::string> dir = get_dir("/tmp/memTracer/" + std::to_string(pid));
+    for (auto & i : dir) {
+        std::vector<std::string> dir_2 = get_dir("/tmp/memTracer/" + std::to_string(pid) + "/" + i);
+        for (auto & j : dir_2) {
+            std::string fin_dir = "/tmp/memTracer/" + std::to_string(pid) + "/" + i + "/" + j;
+            std::cout << "------------------------------------------------------\n";
+            std::cout << "pid: " << pid << "\n";
+            std::cout << "tid: " << i << "\n";
+            std::cout << "address: " << j.substr(0, j.find('_')) << "\n";
+            std::string time_s = j.substr(j.find('_') + 1, j.rfind('_'));
+            time_t time = atoll(time_s.c_str());
+            std::cout << "time: " << ctime(&time);
+            std::cout << "size: " << j.substr(j.rfind('_') + 1, j.size()) << "\n";
+            std::cout << "------------------------------------------------------\n";
+//            print_file(fin_dir);
+            std::ifstream inFile(fin_dir);
+            std::string str;
+            while(inFile.good()){
+                getline(inFile,str);
+                std::cout<<str<<"\n";
+            }
+        }
+
+    }
+
+}
 
