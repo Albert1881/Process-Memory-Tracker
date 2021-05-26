@@ -5,7 +5,7 @@
 #ifndef MEMORYTRACER_MEMORYALLOCATIONWRAP_H
 #define MEMORYTRACER_MEMORYALLOCATIONWRAP_H
 
-
+#include "tracerConfig.h"
 #include <stdlib.h>
 #include <execinfo.h>
 #include "StackTracerManagement.h"

@@ -1,0 +1,2 @@
+#define PATH @PATH@
+#define DEBUG_BUILD @DEBUG_BUILD@
