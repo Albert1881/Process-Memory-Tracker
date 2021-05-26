@@ -76,7 +76,6 @@ bool clearDirectory(const char *path) {
 }
 
 void recordInsertFile(trace_record *&record) {
-    std::fstream File_output;
     char path[MAX_PATH_LEN] = {0};
 
     sprintf(path, "/tmp/memTracer/%llu/%llu/%zu_%ld_%zu",
@@ -87,16 +86,17 @@ void recordInsertFile(trace_record *&record) {
             record->size);
 //    printf("%s\n", path);
     createDirectory(path);
-    File_output.open(path, std::fstream::out);
-    File_output << record->depth << std::endl;
+
+    FILE *file = fopen(path, "w");
+    fprintf(file, "%d\n", record->depth);
     for (int j = 0; j < record->depth; ++j) {
         char result[1024] = {0};
         char *message = record->messages[j];
         char *result_ptr = result;
         StackTracerManagement::getInstance().parseCmd(message, result_ptr);
-        File_output << result_ptr;
+        fprintf(file, "%s", result_ptr);
     }
-    File_output.close();
+    fclose(file);
 }
 
 void recordRemoveFile(trace_record *&record) {

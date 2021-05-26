@@ -260,6 +260,7 @@ void StackTracerManagement::recordLeakerMemoryInfo(char const *path) {
         fprintf(fout, "ID: %d\n", i + 1);
         fprintf(fout, "Time: %s", asctime(localtime(&record_list[i]->create_time)));
         fprintf(fout, "PID: %llu, TID: %llu\n", record_list[i]->pid, record_list[i]->tid);
+        fprintf(fout, "Size: %zu\n", record_list[i]->size);
         fprintf(fout, "There are %d messages: \n", record_list[i]->depth);
         for (int j = 0; j < record_list[i]->depth; ++j) {
             char *message = record_list[i]->messages[j];

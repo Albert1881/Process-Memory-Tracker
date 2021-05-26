@@ -1,4 +1,3 @@
 # ignore target folder
 .idea
-build
-build_sh
+build*
