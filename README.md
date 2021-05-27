@@ -82,6 +82,7 @@ ProgramTracer
 ├── test
 │   ├── DockingTest.cpp
 │   └── SimpleTest.cpp
+├── tmp
 └── tracerConfig.h.in
 ```
 
@@ -89,6 +90,7 @@ ProgramTracer
 - `include`: Header folder of project **Program Memory Tracker**
 - `src`: Source folder of project **Program Memory Tracker**
 - `test`: Test folder of project **Program Memory Tracker**
+- `tmp`: Sample output of `/tmp/memInfo` folder when **Program Memory Tracker** record information.
 - `tracerConfig.h.in`: Configure a header file to pass some of the CMake settings.
 
 ### Set Up
