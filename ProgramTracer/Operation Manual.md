@@ -1,7 +1,18 @@
 # Process-Memory-Tracker
 
+## System Memory Tracker
 
-
+After  executing the memory leak program, you will have the following prompts:
+```
+Please enter the following number
+1: Show memory info of all process
+2: Show the current cpu usage
+3: Detect file handle and memory change of the program with certain pid
+4: Stop detecting file handle and memory change in 3
+5: Get the called stack info of the program with certain pid
+0: Exit!
+```
+Each number has its corresponding instruction.
 
 ## Program Memory Tracker
 
