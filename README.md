@@ -32,9 +32,35 @@ Please enter the following number
 
 Each number has its corresponding instruction.
 
-if enter 5.
+### Option
 
-## Program Memory Tracker
+- If choose number **5**, it will printed the leak location can be through the `/tmp/memInfo` folder which was recorded by **Program Tracer**. So at this time, there must be some process run with  **Program Tracer**
+
+#### Run Program Tracer
+
+- Set test of **Program Tracer**: modify `Process-Memory-Tracker/ProgramTracer/CMakeLists` file
+
+```sh
+# Change the test file: test/DockingTest.cpp is the test file.
+add_executable(${PROJECT_NAME} test/DockingTest.cpp ${SRC_FILES} ${project_HEADERS})
+```
+
+- set up
+
+```sh
+# Current path is "Process-Memory-Tracker/ProgramTracer"
+mkdir build
+cd build
+cmake ..
+make
+
+# Execute test file.
+./ProgramTracer
+```
+
+
+
+## Program Tracker
 
 ### Structure
 
@@ -138,10 +164,12 @@ _start at ??:?
 
 ### Simple Test
 
+The `SimpleTest.cpp` file contains the basic memory allocation examples. 
+
 - `CMakeLists` file
 
 ```sh
-# Change the test file: test/DockingTest.cpp is the test file.
+# Change the test file: test/SimpleTest.cpp is the test file.
 add_executable(${PROJECT_NAME} test/SimpleTest.cpp ${SRC_FILES} ${project_HEADERS})
 ```
 
