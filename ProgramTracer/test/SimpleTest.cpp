@@ -1,12 +1,10 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <iostream>
-//#include "../include/MemoryAllocationWrap.h"
-//#include "../include/StackTracerManagement.h"
 #include <execinfo.h>
 #include <unistd.h>
-#include <thread> // std::thread
-#include <mutex>  // std::mutex, std::lock_guard
+#include <thread>
+#include <mutex>
 #include <pthread.h>
 
 void malloc_test();
@@ -21,33 +19,28 @@ void freopen_test();
 
 void thread_test();
 
+void segfault_test();
 
-class father {
-    int *p1;
+void infinite_test();
+void infinite_test();
 
+class Shape {
+    int *shape_ptr;
 public:
-    father() { p1 = new int; }
+    Shape() { shape_ptr = new int; }
 
-    ~father() { delete p1; }
+    ~Shape() { delete shape_ptr; }
 };
 
-class son : public father {
-    int *p2;
+class Rectangle : public Shape {
+    int *rectangle_ptr;
 
 public:
-    son() { p2 = new int; }
+    Rectangle() { rectangle_ptr = new int; }
 
-    ~son() { delete p2; }
+    ~Rectangle() { delete rectangle_ptr; }
 };
 
-class A {
-    int *p1;
-
-public:
-    A() { p1 = new int; }
-
-    ~A() { delete p1; }
-};
 
 int main() {
     malloc_test();
@@ -72,14 +65,14 @@ void malloc_test() {
 
 void new_test() {
     fprintf(stdout, "===== new_test start =====\n");
-    father *p = new son;
+    Shape *p = new Rectangle;
     delete p;
     fprintf(stdout, "===== new_test finish =====\n");
 }
 
 void new_array_test() {
     fprintf(stdout, "===== new_array_test start =====\n");
-    A *p = new A[5];
+    Rectangle *p = new Rectangle[5];
     delete[] p;
 
     int *int_ptr = new int[10];
@@ -141,3 +134,13 @@ void thread_test() {
     fprintf(stdout, "===== thread_test finish =====\n");
 }
 
+void segfault_test() {
+    int *p = (int *) 0x11111111;
+    *p = 0;
+}
+
+void infinite_test() {
+    while (1) {
+        int *int_ptr = new int(10);
+    };
+}

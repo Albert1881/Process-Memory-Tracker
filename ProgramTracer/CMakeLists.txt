@@ -23,7 +23,7 @@ file(GLOB_RECURSE project_HEADERS STATIC
         "./include/StackTracerManagement.h"
         "./include/TracerSignal.h")
 SET(CMAKE_CXX_FLAGS "-g")
-# The version number
+
 set(PATH \"leakInfo\")
 set(DEBUG_BUILD true)
 
@@ -39,7 +39,7 @@ configure_file(
         "${PROJECT_SOURCE_DIR}/tracerConfig.h.in"
         "${PROJECT_BINARY_DIR}/tracerConfig.h"
 )
-add_executable(${PROJECT_NAME} ./test/main.cpp ${SRC_FILES} ${project_HEADERS})
+add_executable(${PROJECT_NAME} test/DockingTest.cpp ${SRC_FILES} ${project_HEADERS})
 set_target_properties(${PROJECT_NAME}
         PROPERTIES
         LINK_FLAGS "-rdynamic -pthread -Wall -Wl,--wrap=malloc -Wl,--wrap=free -Wl,--wrap=_Znwm -Wl,--wrap=_ZdlPv -Wl,--wrap=fopen -Wl,--wrap=fclose -Wl,--wrap=freopen")
