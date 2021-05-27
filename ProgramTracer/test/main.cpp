@@ -8,25 +8,19 @@
 #include <thread> // std::thread
 #include <mutex>  // std::mutex, std::lock_guard
 #include <pthread.h>
-// Blog: https://blog.csdn.net/fengbingchun/article/details/82947673
+
+void malloc_test();
+
+void new_test();
+
+void new_array_test();
+
+void fopen_test();
+
+void freopen_test();
 
 void thread_test();
 
-void testFopen();
-
-void testFreopen();
-
-void test1();
-
-void test2();
-
-void test3();
-
-void test4();
-
-void test5();
-
-void print_stack_frames();
 
 class father {
     int *p1;
@@ -56,125 +50,94 @@ public:
 };
 
 int main() {
-//    while (true) {
-//    int *p2 = new int(10);
-//    delete[] p2;
-//}
-//    int *p2 = new int[10];
-//    delete[]p2;
-//    testFreopen();
-//    testFopen();
-//    thread_test();
-    test1();
+    malloc_test();
     return 0;
 }
 
+void malloc_test() {
+    fprintf(stdout, "===== malloc_test start =====\n");
+    char *str_noleak;
+    str_noleak = (char *) malloc(15);
+    strcpy(str_noleak, "It's malloc_test. \nThe str didn't leak.");
+    printf("String = %s,  Address = %u\n", str_noleak, reinterpret_cast<size_t>(str_noleak));
 
-void testFopen() {
-    FILE *file = fopen("hello", "w");
+    char *str_leak;
+    str_leak = (char *) malloc(15);
+    strcpy(str_leak, "It's malloc_test. \nThe str did leak.");
+    printf("String = %s,  Address = %u\n", str_leak, reinterpret_cast<size_t>(str_leak));
+    free(str_noleak);
+    fprintf(stdout, "===== malloc_test finish =====\n");
 
-    printf("main\n");
-    if (file == NULL) {
-        printf("open file test.txt failed!\n");
-    } else {
-        printf("open file test.txt succeed!\n");
-        fprintf(file, "%s %s %s %d", "We", "are", "in", 222);
+}
+
+void new_test() {
+    fprintf(stdout, "===== new_test start =====\n");
+    father *p = new son;
+    delete p;
+    fprintf(stdout, "===== new_test finish =====\n");
+}
+
+void new_array_test() {
+    fprintf(stdout, "===== new_array_test start =====\n");
+    A *p = new A[5];
+    delete[] p;
+
+    int *int_ptr = new int[10];
+    for (int i = 0; i < 10; ++i) {
+        int_ptr[i] = i;
     }
-    fclose(file);
+    delete[] (int_ptr);
+    fprintf(stdout, "===== new_array_test finish =====\n");
 }
 
-void testFreopen() {
-    FILE *file = fopen("hello", "w");
-    FILE *refile = freopen("out.txt", "w", file);
-//    FILE *refile = freopen("out.txt", "w", stdout);
-    fprintf(refile, "%s", "test freopen");
+void fopen_test() {
+    fprintf(stdout, "===== fopen_test start =====\n");
 
-    fclose(refile);
+    FILE *file_noleak = fopen("fopen_noleak", "w");
+
+    if (file_noleak == NULL) {
+        printf("open file fopen_noleak failed!\n");
+    } else {
+        printf("open file fopen_noleak succeed!\n");
+        fprintf(file_noleak, "It's fopen_test. \nThe file didn't leak.");
+    }
+    FILE *file_leak = fopen("fopen_leak", "w");
+    if (file_noleak == NULL) {
+        printf("open file fopen_leak failed!\n");
+    } else {
+        printf("open file fopen_leak succeed!\n");
+        fprintf(file_noleak, "It's fopen_test. \nThe file did leak.");
+    }
+    fclose(file_noleak);
+    fprintf(stdout, "===== fopen_test finish =====\n");
 }
+
+void freopen_test() {
+    fprintf(stdout, "===== freopen_test start =====\n");
+    FILE *fp;
+    printf("This text is in stdout\n");
+    fp = freopen("freopen_test", "w+", stdout);
+    printf("This text is in freopen_test\n");
+    fclose(fp);
+    fprintf(stdout, "===== freopen_test finish =====\n");
+}
+
 
 void thread_malloc(int size) {
-    std::thread::id tid = std::this_thread::get_id();
-
-    //    printf("ThreadID: %ld\n", tid);
-    char *p1 = (char *) malloc(size);
-    //    free(p1);
+    char *ptr = (char *) malloc(size);
+    free(ptr);
 }
 
 void thread_test() {
+    fprintf(stdout, "===== thread_test start =====\n");
+
     std::thread threads[10];
-    // spawn 10 threads:
-    for (int i = 0; i < 10; ++i)
-        threads[i] = std::thread(thread_malloc, (i + 1) * 10);
-
-    for (auto &th : threads)
-        th.join();
-}
-
-void test1() {
-    fprintf(stdout, "===== test1 start =====\n");
-
-    char *p1 = (char *) malloc(4);
-
-    int *p2 = new int[10];
     for (int i = 0; i < 10; ++i) {
-        p2[i] = i;
+        threads[i] = std::thread(thread_malloc, (i + 1) * 10);
     }
-//    free(p1);
-    delete[] (p2);
-    fprintf(stdout, "===== test1 finish =====\n");
-}
-
-void test2() {
-    fprintf(stdout, "===== test2 start =====\n");
-    father *p = new son;
-    delete p;
-    fprintf(stdout, "===== test2 finish =====\n");
-}
-
-void test3() {
-    fprintf(stdout, "===== test3 start =====\n");
-    A *p = new A[5];
-    delete[] p;
-    fprintf(stdout, "===== test3 finish =====\n");
-}
-
-void test4() {
-    test5();
-}
-
-void test5() {
-    int *p1 = new int(4);
-    int *p2 = new int(5);
-    delete p1;
-    printf("hello\n");
-    print_stack_frames();
-}
-
-void print_stack_frames() {
-    int j, nptrs;
-#define SIZE 100
-    void *buffer[100];
-    char **strings;
-
-    nptrs = backtrace(buffer, SIZE);
-    printf("backtrace() returned %d addresses\n", nptrs);
-
-    /* The call backtrace_symbols_fd(buffer, nptrs, STDOUT_FILENO)
-       would produce similar output to the following: */
-
-    strings = backtrace_symbols(buffer, nptrs);
-    if (strings == NULL) {
-        perror("backtrace_symbols");
-        exit(EXIT_FAILURE);
+    for (auto &th : threads) {
+        th.join();
     }
-
-    for (j = 0; j < nptrs; j++)
-        printf("%s\n", strings[j]);
-
-    free(strings);
-
-    printf("maps\n");
-    char buff[64] = {0x00};
-    sprintf(buff, "cat /proc/%d/maps", getpid());
-    system((const char *) buff);
+    fprintf(stdout, "===== thread_test finish =====\n");
 }
+
