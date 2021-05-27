@@ -1,2 +1,11 @@
 # Process-Memory-Tracker
-CS302 Project 2
+## Introduction
+
+
+
+## Structure
+
+
+
+<img src="img/structure.png" style="zoom:50%;" />
+
