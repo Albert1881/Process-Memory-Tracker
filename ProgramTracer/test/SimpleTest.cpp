@@ -1,5 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <string>
+#include <string.h>
 #include <iostream>
 #include <execinfo.h>
 #include <unistd.h>
@@ -43,24 +45,27 @@ public:
 
 
 int main() {
-    malloc_test();
+//    malloc_test();
+//    new_test();
+//    new_array_test();
+//    fopen_test();
+//    freopen_test();
     return 0;
 }
 
 void malloc_test() {
     fprintf(stdout, "===== malloc_test start =====\n");
     char *str_noleak;
-    str_noleak = (char *) malloc(15);
-    strcpy(str_noleak, "It's malloc_test. \nThe str didn't leak.");
+    str_noleak = (char *) malloc(64);
+    strcpy(str_noleak, "It's malloc_test. \nThe str didn't leak.\n");
     printf("String = %s,  Address = %u\n", str_noleak, reinterpret_cast<size_t>(str_noleak));
 
     char *str_leak;
-    str_leak = (char *) malloc(15);
+    str_leak = (char *) malloc(64);
     strcpy(str_leak, "It's malloc_test. \nThe str did leak.");
     printf("String = %s,  Address = %u\n", str_leak, reinterpret_cast<size_t>(str_leak));
     free(str_noleak);
     fprintf(stdout, "===== malloc_test finish =====\n");
-
 }
 
 void new_test() {

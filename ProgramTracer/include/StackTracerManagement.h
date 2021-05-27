@@ -72,7 +72,6 @@ public:
         if (!stack_trace_mutex.try_lock()) {
             stack_trace_mutex.unlock();
         }
-        printf("getLock %d\n", stack_trace_mutex.try_lock());
     }
 
 private:
