@@ -19,6 +19,8 @@ bool removeDirectory(unsigned long long pid) {
     rmdir(path);
 }
 
+// Create multi-level directories at once.
+// Cite the code of CSDN: https://blog.csdn.net/m0_37579176/article/details/105741164
 int createDirectory(const char *directoryPath) {
     int dirPathLen = strlen(directoryPath);
     if (dirPathLen > MAX_PATH_LEN) {
@@ -39,6 +41,8 @@ int createDirectory(const char *directoryPath) {
     return 0;
 }
 
+// Delete all files in the folder.
+// Cite the code of CSDN: https://blog.csdn.net/sunshihua12829/article/details/45916225
 void getfilepath(const char *path, const char *filename, char *filepath) {
     strcpy(filepath, path);
     if (filepath[strlen(path) - 1] != PATH_DELIMITER) {
@@ -51,6 +55,8 @@ void getfilepath(const char *path, const char *filename, char *filepath) {
 }
 
 
+// Delete all files in the folder.
+// Cite the code of CSDN: https://blog.csdn.net/sunshihua12829/article/details/45916225
 bool clearDirectory(const char *path) {
     DIR *dir;
     struct dirent *dirinfo;

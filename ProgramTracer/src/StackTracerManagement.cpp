@@ -273,7 +273,10 @@ void StackTracerManagement::recordLeakerMemoryInfo(char const *path) {
                 fprintf(fout, "Type: malloc\n");
                 break;
             case Znwm_type:
-                fprintf(fout, "Type: Znwm\n");
+                fprintf(fout, "Type: new\n");
+                break;
+            case newArr_type:
+                fprintf(fout, "Type: New[]\n");
                 break;
             case fopen_type:
                 fprintf(fout, "Type: fopen\n");
