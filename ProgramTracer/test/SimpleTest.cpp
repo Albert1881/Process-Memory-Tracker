@@ -46,14 +46,14 @@ public:
 
 
 int main() {
-//    malloc_test();
+    malloc_test();
 //    new_test();
 //    new_array_test();
 //    fopen_test();
 //    freopen_test();
 //    thread_test();
 //    segfault_test();
-    infinite_test();
+//    infinite_test();
     return 0;
 }
 
@@ -61,12 +61,12 @@ void malloc_test() {
     fprintf(stdout, "===== malloc_test start =====\n");
     char *str_noleak;
     str_noleak = (char *) malloc(64);
-    strcpy(str_noleak, "It's malloc_test. \nThe str didn't leak.\n");
+    strcpy(str_noleak, "It's malloc_test. The str didn't leak.");
     printf("String = %s,  Address = %u\n", str_noleak, reinterpret_cast<size_t>(str_noleak));
 
     char *str_leak;
     str_leak = (char *) malloc(64);
-    strcpy(str_leak, "It's malloc_test. \nThe str did leak.");
+    strcpy(str_leak, "It's malloc_test. The str did leak.");
     printf("String = %s,  Address = %u\n", str_leak, reinterpret_cast<size_t>(str_leak));
     free(str_noleak);
     fprintf(stdout, "===== malloc_test finish =====\n");

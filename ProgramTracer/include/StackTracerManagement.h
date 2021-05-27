@@ -69,9 +69,10 @@ public:
     void getRecordList(trace_record *&record_list);
 
     void getLock() {
-        if (!stack_trace_mutex.try_lock()) {
-            stack_trace_mutex.unlock();
-        }
+//        if (!stack_trace_mutex.try_lock()) {
+//            stack_trace_mutex.unlock();
+//        }
+        stack_trace_mutex.unlock();
     }
 
 private:

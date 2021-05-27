@@ -141,7 +141,6 @@ __attribute__((destructor)) void after_main() {
     if (!StackTracerManagement::getInstance().isEmpty()) {
         printf("MEMORY LEAK\n");
     }
-    StackTracerManagement::getInstance().getLock();
     char const *path = {PATH};
     if (strlen(path) == 0) {
         StackTracerManagement::getInstance().recordLeakerMemoryInfo(NULL);
@@ -149,6 +148,7 @@ __attribute__((destructor)) void after_main() {
         createDirectory(PATH);
         StackTracerManagement::getInstance().recordLeakerMemoryInfo(path);
     }
+    StackTracerManagement::getInstance().getLock();
     StackTracerManagement::getInstance().removeAll();
     removeDirectory(getpid());
 
