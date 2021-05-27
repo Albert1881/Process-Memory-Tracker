@@ -24,6 +24,7 @@ void thread_test();
 void segfault_test();
 
 void infinite_test();
+
 void infinite_test();
 
 class Shape {
@@ -50,6 +51,9 @@ int main() {
 //    new_array_test();
 //    fopen_test();
 //    freopen_test();
+//    thread_test();
+//    segfault_test();
+    infinite_test();
     return 0;
 }
 
