@@ -87,7 +87,7 @@ void recordInsertFile(trace_record *&record) {
 //    printf("%s\n", path);
     createDirectory(path);
 
-    FILE *file = fopen(path, "w");
+    FILE *file = __real_fopen(path, "w");
     fprintf(file, "%d\n", record->depth);
     for (int j = 0; j < record->depth; ++j) {
         char result[1024] = {0};
@@ -96,7 +96,7 @@ void recordInsertFile(trace_record *&record) {
         StackTracerManagement::getInstance().parseCmd(message, result_ptr);
         fprintf(file, "%s", result_ptr);
     }
-    fclose(file);
+    __real_fclose(file);
 }
 
 void recordRemoveFile(trace_record *&record) {

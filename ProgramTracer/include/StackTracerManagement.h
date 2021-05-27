@@ -25,10 +25,14 @@
 #define MAX_PROG_ADDR_LENGTH 64
 
 
+enum trace_type {
+    malloc_type, Znwm_type, newArr_type, fopen_type, exception_type
+};
 struct trace_record {
     unsigned long id;
     unsigned long long pid;
     unsigned long long tid;
+    trace_type ttype;
     void *address;
     size_t size;
     int depth;
@@ -44,11 +48,15 @@ public:
         return *_instance;
     }
 
-    bool insert(void *ptr, size_t size);
+    bool insert(trace_type ttype, void *ptr, size_t size = 0);
 
-    bool remove(void *ptr);
+    bool insert_unlock(trace_type ttype, void *ptr, size_t size = 0);
+
+    bool remove(trace_type ttype, void *ptr);
 
     void removeAll(void);
+
+    void releaseOperator(trace_type ttype, void *ptr);
 
     bool isEmpty(void);
 
@@ -61,9 +69,10 @@ public:
     void getRecordList(trace_record *&record_list);
 
     void getLock() {
-        if (!StackTracerManagement::getInstance().stack_trace_mutex.try_lock()) {
-            StackTracerManagement::getInstance().stack_trace_mutex.unlock();
+        if (!stack_trace_mutex.try_lock()) {
+            stack_trace_mutex.unlock();
         }
+        printf("getLock %d\n", stack_trace_mutex.try_lock());
     }
 
 private:
@@ -90,7 +99,7 @@ private:
 
     static void init();
 
-    void setAddrBacktrace(trace_record *&record, void *ptr, size_t size);
+    void setAddrBacktrace(trace_record *&record, trace_type ttype, void *ptr, size_t size);
 
     void releaseAddrBacktrace(trace_record *&record);
 

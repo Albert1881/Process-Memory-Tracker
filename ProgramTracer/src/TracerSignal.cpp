@@ -42,7 +42,7 @@ void signal_handler(int signum) {
 
     }
     StackTracerManagement::getInstance().getLock();
-    StackTracerManagement::getInstance().insert(NULL, 0);
+    StackTracerManagement::getInstance().insert_unlock(exception_type, NULL, 0);
     exit(signum);
 }
 

@@ -12,6 +12,10 @@
 
 void thread_test();
 
+void testFopen();
+
+void testFreopen();
+
 void test1();
 
 void test2();
@@ -24,8 +28,7 @@ void test5();
 
 void print_stack_frames();
 
-class father
-{
+class father {
     int *p1;
 
 public:
@@ -34,8 +37,7 @@ public:
     ~father() { delete p1; }
 };
 
-class son : public father
-{
+class son : public father {
     int *p2;
 
 public:
@@ -44,8 +46,7 @@ public:
     ~son() { delete p2; }
 };
 
-class A
-{
+class A {
     int *p1;
 
 public:
@@ -54,30 +55,52 @@ public:
     ~A() { delete p1; }
 };
 
-int main()
-{
-    //    printf("MainThreadID: %ld\n",std::this_thread::get_id());
-    //    thread_test();
-    std::hash<std::thread::id>{}(std::this_thread::get_id());
-    //    while (true) {
-    //
-    //    }
+int main() {
+//    while (true) {
+//    int *p2 = new int(10);
+//    delete[] p2;
+//}
+//    int *p2 = new int[10];
+//    delete[]p2;
+//    testFreopen();
+//    testFopen();
+//    thread_test();
     test1();
-    //    thread_test();
     return 0;
 }
 
-void thread_malloc(int size)
-{
+
+void testFopen() {
+    FILE *file = fopen("hello", "w");
+
+    printf("main\n");
+    if (file == NULL) {
+        printf("open file test.txt failed!\n");
+    } else {
+        printf("open file test.txt succeed!\n");
+        fprintf(file, "%s %s %s %d", "We", "are", "in", 222);
+    }
+    fclose(file);
+}
+
+void testFreopen() {
+    FILE *file = fopen("hello", "w");
+    FILE *refile = freopen("out.txt", "w", file);
+//    FILE *refile = freopen("out.txt", "w", stdout);
+    fprintf(refile, "%s", "test freopen");
+
+    fclose(refile);
+}
+
+void thread_malloc(int size) {
     std::thread::id tid = std::this_thread::get_id();
 
     //    printf("ThreadID: %ld\n", tid);
-    char *p1 = (char *)malloc(size);
+    char *p1 = (char *) malloc(size);
     //    free(p1);
 }
 
-void thread_test()
-{
+void thread_test() {
     std::thread threads[10];
     // spawn 10 threads:
     for (int i = 0; i < 10; ++i)
@@ -87,45 +110,39 @@ void thread_test()
         th.join();
 }
 
-void test1()
-{
+void test1() {
     fprintf(stdout, "===== test1 start =====\n");
 
-    char *p1 = (char *)malloc(4);
+    char *p1 = (char *) malloc(4);
 
     int *p2 = new int[10];
-    for (int i = 0; i < 10; ++i)
-    {
+    for (int i = 0; i < 10; ++i) {
         p2[i] = i;
     }
-    free(p1);
+//    free(p1);
     delete[] (p2);
     fprintf(stdout, "===== test1 finish =====\n");
 }
 
-void test2()
-{
+void test2() {
     fprintf(stdout, "===== test2 start =====\n");
     father *p = new son;
     delete p;
     fprintf(stdout, "===== test2 finish =====\n");
 }
 
-void test3()
-{
+void test3() {
     fprintf(stdout, "===== test3 start =====\n");
     A *p = new A[5];
     delete[] p;
     fprintf(stdout, "===== test3 finish =====\n");
 }
 
-void test4()
-{
+void test4() {
     test5();
 }
 
-void test5()
-{
+void test5() {
     int *p1 = new int(4);
     int *p2 = new int(5);
     delete p1;
@@ -133,8 +150,7 @@ void test5()
     print_stack_frames();
 }
 
-void print_stack_frames()
-{
+void print_stack_frames() {
     int j, nptrs;
 #define SIZE 100
     void *buffer[100];
@@ -147,8 +163,7 @@ void print_stack_frames()
        would produce similar output to the following: */
 
     strings = backtrace_symbols(buffer, nptrs);
-    if (strings == NULL)
-    {
+    if (strings == NULL) {
         perror("backtrace_symbols");
         exit(EXIT_FAILURE);
     }
@@ -161,5 +176,5 @@ void print_stack_frames()
     printf("maps\n");
     char buff[64] = {0x00};
     sprintf(buff, "cat /proc/%d/maps", getpid());
-    system((const char *)buff);
+    system((const char *) buff);
 }

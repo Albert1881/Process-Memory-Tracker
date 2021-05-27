@@ -15,7 +15,7 @@ set(CMAKE_CXX_STANDARD 11)
 #set_target_properties(${PROJECT_NAME} PROPERTIES LINK_FLAGS "-g -rdynamic -pthread -Wall -Wl,--wrap=malloc -Wl,--wrap=free -Wl,--wrap=_Znwm -Wl,--wrap=_ZdlPv")
 #
 
-aux_source_directory(./src SRC_FILES )
+aux_source_directory(./src SRC_FILES)
 
 file(GLOB_RECURSE project_HEADERS STATIC
         "./include/FileManagement.h"
@@ -25,7 +25,7 @@ file(GLOB_RECURSE project_HEADERS STATIC
 SET(CMAKE_CXX_FLAGS "-g")
 # The version number
 set(PATH \"leakInfo\")
-set(DEBUG_BUILD false)
+set(DEBUG_BUILD true)
 
 configure_file(
         "${PROJECT_SOURCE_DIR}/tracerConfig.h.in"
@@ -40,5 +40,7 @@ configure_file(
         "${PROJECT_BINARY_DIR}/tracerConfig.h"
 )
 add_executable(${PROJECT_NAME} ./test/main.cpp ${SRC_FILES} ${project_HEADERS})
-set_target_properties(${PROJECT_NAME} PROPERTIES LINK_FLAGS "-rdynamic -pthread -Wall -Wl,--wrap=malloc -Wl,--wrap=free -Wl,--wrap=_Znwm -Wl,--wrap=_ZdlPv")
+set_target_properties(${PROJECT_NAME}
+        PROPERTIES
+        LINK_FLAGS "-rdynamic -pthread -Wall -Wl,--wrap=malloc -Wl,--wrap=free -Wl,--wrap=_Znwm -Wl,--wrap=_ZdlPv -Wl,--wrap=fopen -Wl,--wrap=fclose -Wl,--wrap=freopen")
 
