@@ -13,12 +13,11 @@ void showMenu(){
     cout<<"0: Exit!\n";
 }
 int main() {
-    set<Process>mySet;
-    set<int>pids;
+    map<int,Process>mySet;
     std::mutex mt;
     std::mutex mt_detect;
     ull totalMem = getTotalMem();
-    thread tid_getInfo(getMemInfo,std::ref(mt),std::ref(mySet),std::ref(pids),totalMem);
+    thread tid_getInfo(getMemInfo,std::ref(mt),std::ref(mySet),totalMem);
     tid_getInfo.detach();
     string cmd;
     bool flag_detect = false;
@@ -38,7 +37,7 @@ int main() {
             mt_detect.lock();
             flag_detect = true;
             mt_detect.unlock();
-            int pid = detectCertainPid(mySet,pids);
+            int pid = detectCertainPid(mySet);
             if(pid != -1){
                 thread tid_detect(print_compare_result,std::ref(mt_detect),std::ref(pid),std::ref(flag_detect));
                 tid_detect.detach();
@@ -52,7 +51,7 @@ int main() {
         }
         else if(cmd == "5"){
             cout<<"5: Get the called stack info of the program with certain pid\n";
-            int pid = detectCertainPid(mySet,pids);
+            int pid = detectCertainPid(mySet);
             if(pid != -1) {
                 print_detect_static(pid);
             }

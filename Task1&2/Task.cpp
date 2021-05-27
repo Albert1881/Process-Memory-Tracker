@@ -8,6 +8,7 @@
 #include <cstring>
 #include <fstream>
 #include "Task.h"
+#include <set>
 //CPU
 int get_cpuoccupy(CPU_OCCUPY *cpust) {
     FILE *fd;
@@ -84,11 +85,11 @@ ull getTotalMem(){
     }
 }
 
-void getMemInfo(std::mutex &mt,std::set<Process>&mySet,std::set<int>&pids,ull totalMem) {
+void getMemInfo(std::mutex &mt,std::map<int,Process>&mySet,ull totalMem) {
     while (true) {
         mt.lock();
         mySet.clear();
-        pids.clear();
+        std::set<int>pids;
         std::string process_id, process_name, process_vmsize,process_vmrss,process_vmdata;
         DIR *dir;
         struct dirent *entry;
@@ -171,13 +172,28 @@ void getMemInfo(std::mutex &mt,std::set<Process>&mySet,std::set<int>&pids,ull to
                     }
                 }
             }
-            mySet.insert(Process(strtol(process_id.c_str(),nullptr,10),
-                                 process_name,
-                                 strtoull(process_vmsize.c_str(),nullptr,10),
-                                 strtoull(process_vmrss.c_str(),nullptr,10),
-                                 strtoull(process_vmdata.c_str(),nullptr,10),
-                                 strtoull(process_vmsize.c_str(),nullptr,10)/(double)totalMem));
-            pids.insert(strtol(process_id.c_str(), nullptr,10));
+            int p = (int)strtol(process_id.c_str(),nullptr,10);
+            pids.insert(p);
+            auto iter = mySet.find(p);
+            //update
+            if(iter != mySet.end() && process_name == iter->second.name) {
+                iter->second.lastVmSize = iter->second.VmSize;
+                iter->second.VmSize = strtoull(process_vmsize.c_str(), nullptr, 10);
+                iter->second.VmRSS = strtoull(process_vmrss.c_str(), nullptr, 10);
+                iter->second.VmData = strtoull(process_vmdata.c_str(), nullptr, 10);
+                iter->second.VmSizerate = (double) strtoull(process_vmsize.c_str(), nullptr, 10) /(double) totalMem;
+            }
+            //insert
+            else {
+                mySet.insert(std::make_pair(p,Process(p,
+                                                    process_name,
+                                                    0,
+                                                    strtoull(process_vmsize.c_str(), nullptr, 10),
+                                                    strtoull(process_vmrss.c_str(), nullptr, 10),
+                                                    strtoull(process_vmdata.c_str(), nullptr, 10),
+                                                    (double) strtoull(process_vmsize.c_str(), nullptr, 10) /
+                                                    (double) totalMem)));
+            }
             process_id = "";
             process_name = "";
             process_vmsize = "";
@@ -186,32 +202,48 @@ void getMemInfo(std::mutex &mt,std::set<Process>&mySet,std::set<int>&pids,ull to
             fclose(fp); /* 关闭stattus文件 */
         }
         closedir(dir); /* 关闭目录 */
+        for(auto iter = mySet.begin();iter!=mySet.end();){
+            if(pids.find(iter->first)==pids.end()){
+                mySet.erase(iter++);
+            }else{
+                ++iter;
+            }
+        }
+        pids.clear();
         mt.unlock();
         //Sleep的精度是ms级的，需要更精确更新需要更换
         sleep(1);
     }
 }
 
-void getSuspiciousPid(std::vector<int> &list,std::set<Process>&mySet){
+void getSuspiciousPid(std::vector<int> &list,std::map<int,Process>&mySet){
     for (const auto & iter : mySet) {
-        if(iter.VmSizerate >= 1) {
-            list.push_back(iter.pid);
+        if(iter.second.VmSizerate > 1) {
+            list.push_back(iter.first);
+        }
+        else if(iter.second.VmSize > 100 * iter.second.VmRSS  && 5 * iter.second.lastVmSize < iter.second.VmSize){
+            list.push_back(iter.first);
         }
     }
 }
 
-void traverseMemInfo(std::mutex &mt,std::set<Process>&mySet) {
+void traverseMemInfo(std::mutex &mt,std::map<int,Process>&mySet) {
+    std::set<Process>tmp;
     mt.lock();
+    for (const auto & iter : mySet) {
+        tmp.insert(Process(iter.first,iter.second.name,iter.second.VmSize,iter.second.VmRSS));
+    }
+    mt.unlock();
     printf("\nThere are %lu datas\n",mySet.size());
     printf("name\tpid\tVmSize(KB)\tVmRSS(KB)\n");
-    for (const auto & iter : mySet) {
+    for (const auto & iter : tmp) {
         printf("%s\t%d\t%llu\t%llu\n",iter.name.c_str(),iter.pid,iter.VmSize,iter.VmRSS);
         //std::cout<<iter.VmRSSrate<<"\n";
     }
-    mt.unlock();
+    tmp.clear();
 }
 
-int detectCertainPid(std::set<Process>&mySet,std::set<int>&pids) {
+int detectCertainPid(std::map<int,Process>&mySet) {
     std::string s_pid;
     std::vector<int>suspiciousPid;
     getSuspiciousPid(suspiciousPid,mySet);
@@ -219,10 +251,11 @@ int detectCertainPid(std::set<Process>&mySet,std::set<int>&pids) {
     for(int p : suspiciousPid){
         printf("%d ",p);
     }
+    suspiciousPid.swap(suspiciousPid);
     printf("\n");
     std::cin>>s_pid;
-    int pid = strtol(s_pid.c_str(), nullptr,10);
-    if(pid == 0 || pids.find(pid) == pids.end()){
+    int pid = (int)strtol(s_pid.c_str(), nullptr,10);
+    if(pid == 0 || mySet.find(pid) == mySet.end()){
         printf("Please enter the correct pid\n");
         return -1;
     }else{
