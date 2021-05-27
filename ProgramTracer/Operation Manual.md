@@ -2,6 +2,15 @@
 
 ## System Memory Tracker
 
+```shell
+# Current path is "Process-Memory-Tracker/SystemTracker"
+# Compile:
+sudo g++ Task.h Task.cpp main.cpp -o SystemTracker -pthread -std=c++11
+
+# Execute:
+sudo ./SystemTracker
+```
+
 After  executing the memory leak program, you will have the following prompts:
 ```
 Please enter the following number
