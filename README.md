@@ -203,3 +203,12 @@ make
 ./ProgramTracer
 ```
 
+
+
+## Citation
+
+- [LeakTracer](https://github.com/fredericgermain/LeakTracer) gives me the idea of using **hashmap** class to manage data storage.
+- [file-stack_traces-c](https://gist.github.com/jvranish/4441299#file-stack_traces-c) helps me lot about catching exceptions and printing stack traces in C.
+- In `Program/FileManagement.cpp` function `createDirectory()`, I ues the code of [Create multi-level directories](https://blog.csdn.net/m0_37579176/article/details/105741164) in CSDN to help me create a folder directory.
+- In `Program/FileManagement.cpp` function `getfilepath()` and `clearDirectory()`, I ues the code of [Delete all files in the folder](https://blog.csdn.net/sunshihua12829/article/details/45916225) in CSDN to help me clean up the folder directory.
+
