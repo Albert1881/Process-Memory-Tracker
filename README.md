@@ -7,6 +7,22 @@ This project has realized a memory leak detector for C/C++ programs which runs o
 
 <img src="img/structure.png" style="zoom: 33%;" />
 
+### Dependent environment
+
+- Ubuntu / CentOs
+
+- `CXX_STANDARD` 11
+
+#### Dependent library
+
+- `build-essential`
+
+- `cmake`
+
+- `addr2line`
+
+  
+
 ## System Memory Tracker
 
 ```shell
